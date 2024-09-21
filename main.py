@@ -136,5 +136,5 @@ async def follower(guild):
                     await thread.lastMsg.edit(content=f"``FOLLOWERS``== **{js['response']['data']['stats']['followers']}** | ``PLAYS``== **{js['response']['data']['stats']['plays']}** | ``TRACKS``== **{js['response']['data']['stats']['tracks']}**")
                 except:
                     pass
-client.run(os.environ.get('botToken'))
+client.run(os.environ.get('tk'))
 
