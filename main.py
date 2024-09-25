@@ -162,13 +162,16 @@ async def login():
                 if req.status_code<400:
                     js=req.json()
                     token1=js['access_token']
-                await isset.send(content=json.dumps(headers))
-                THREADS.append({
-                    'username':isset.name,
-                    'memberId':memberId,
-                    'songs':songs,
-                    'token':token1 if 'token1' in locals() else None
-                })
+                try:
+                    await isset.send(content=json.dumps(headers))
+                    THREADS.append({
+                        'username':isset.name,
+                        'memberId':memberId,
+                        'songs':songs,
+                        'token':token1 if 'token1' in locals() else None
+                    })
+                except:
+                    pass
 @tasks.loop(seconds=60)
 async def confirmOtp():
     global THREADS,RESULT,PASSWORD
@@ -192,9 +195,8 @@ async def confirmOtp():
                     data={}
                     data['headers']=headers
                     url='https://core.prod.beatstars.net/graphql?op=getMemberProfileByUsername'
-                    data={"operationName":"getMemberProfileByUsername","variables":{"username":msgs[0].content.split('@')[0]},"query":"query getMemberProfileByUsername($username: String!) {\n  profileByUsername(username: $username) {\n    ...memberProfileInfo\n    __typename\n  }\n}\n\nfragment memberProfileInfo on Profile {\n  ...partialProfileInfo\n  location\n  bio\n  tags\n  badges\n  achievements\n  profileInventoryStatsWithUserContents {\n    ...mpGlobalMemberProfileUserContentStatsDefinition\n    __typename\n  }\n  socialInteractions(actions: [LIKE, FOLLOW, REPOST])\n  avatar {\n    assetId\n    fitInUrl(width: 200, height: 200)\n    sizes {\n      small\n      medium\n      large\n      mini\n      __typename\n    }\n    __typename\n  }\n  socialLinks {\n    link\n    network\n    profileName\n    __typename\n  }\n  activities {\n    follow\n    play\n    __typename\n  }\n  __typename\n}\n\nfragment partialProfileInfo on Profile {\n  displayName\n  username\n  memberId\n  location\n  v2Id\n  avatar {\n    assetId\n    sizes {\n      mini\n      __typename\n    }\n    __typename\n  }\n  __typename\n}\n\nfragment mpGlobalMemberProfileUserContentStatsDefinition on ProfileInventoryStats {\n  playlists\n  __typename\n}\n"}
+                    data={"operationName":"getMemberProfileByUsername","variables":{"username":thread.name.split('@')[0]},"query":"query getMemberProfileByUsername($username: String!) {\n  profileByUsername(username: $username) {\n    ...memberProfileInfo\n    __typename\n  }\n}\n\nfragment memberProfileInfo on Profile {\n  ...partialProfileInfo\n  location\n  bio\n  tags\n  badges\n  achievements\n  profileInventoryStatsWithUserContents {\n    ...mpGlobalMemberProfileUserContentStatsDefinition\n    __typename\n  }\n  socialInteractions(actions: [LIKE, FOLLOW, REPOST])\n  avatar {\n    assetId\n    fitInUrl(width: 200, height: 200)\n    sizes {\n      small\n      medium\n      large\n      mini\n      __typename\n    }\n    __typename\n  }\n  socialLinks {\n    link\n    network\n    profileName\n    __typename\n  }\n  activities {\n    follow\n    play\n    __typename\n  }\n  __typename\n}\n\nfragment partialProfileInfo on Profile {\n  displayName\n  username\n  memberId\n  location\n  v2Id\n  avatar {\n    assetId\n    sizes {\n      mini\n      __typename\n    }\n    __typename\n  }\n  __typename\n}\n\nfragment mpGlobalMemberProfileUserContentStatsDefinition on ProfileInventoryStats {\n  playlists\n  __typename\n}\n"}
                     req=requests.post(url,json=data)
-                    print(11111,req.text)
                     memberId=req.json()['data']['profileByUsername']['memberId']
                     url='https://core.prod.beatstars.net/graphql?op=getProfileContentTrackList'
                     data={"operationName":"getProfileContentTrackList","variables":{"memberId":memberId,"page":0,"size":12},"query":"query getProfileContentTrackList($memberId: String!, $page: Int, $size: Int) {\n  profileTracks(memberId: $memberId, page: $page, size: $size) {\n    content {\n      ...MpPartialTrackV3Data\n      __typename\n    }\n    __typename\n  }\n}\n\nfragment MpPartialTrackV3Data on Track {\n  id\n  description\n  releaseDate\n  hasContracts\n  status\n  title\n  v2Id\n  seoMetadata {\n    slug\n    __typename\n  }\n  bundle {\n    date\n    hls {\n      url\n      type\n      signedUrl\n      duration\n      __typename\n    }\n    stream {\n      url\n      type\n      signedUrl\n      duration\n      __typename\n    }\n    __typename\n  }\n  profile {\n    memberId\n    badges\n    displayName\n    username\n    v2Id\n    avatar {\n      sizes {\n        mini\n        __typename\n      }\n      __typename\n    }\n    __typename\n  }\n  price\n  metadata {\n    itemCount\n    tags\n    bpm\n    free\n    offerOnly\n    __typename\n  }\n  artwork {\n    ...MpItemArtwork\n    __typename\n  }\n  socialInteractions(actions: [LIKE])\n  __typename\n}\n\nfragment MpItemArtwork on Image {\n  fitInUrl(width: 700, height: 700)\n  sizes {\n    small\n    medium\n    mini\n    __typename\n  }\n  assetId\n  __typename\n}\n"}
@@ -245,7 +247,7 @@ async def follower(guild):
     for thread in THREADS:
         if 'token' in thread:
             for item in THREADS:
-                if item['username']!=thread['username']:
+                if item['username']!=thread['username'] and 'memberId' in item:
                     url='https://core.prod.beatstars.net/graphql?op=follow'
                     headers={
                         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36 Edg/113.0.1774.9',
